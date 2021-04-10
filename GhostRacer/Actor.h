@@ -3,8 +3,8 @@
 
 #include "GraphObject.h"
 #include "GameConstants.h"
+#include "StudentWorld.h"
 
-using namespace std;
 /**********************************
 GraphObject
 		Actor
@@ -28,28 +28,16 @@ class StudentWorld;
 class Actor : public GraphObject
 {
 public:
-	Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, bool collidable, bool sprayable, StudentWorld* worldptr) :
-		GraphObject(imageID, startX, startY, dir, size, depth) 
-	{
-		m_alive = true;
-		m_collidable = collidable;
-		m_sprayable = sprayable;
-		m_yspeed = 0;
-	}
+	Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, bool collidable, bool sprayable, StudentWorld* worldptr);
 	virtual void doSomething() = 0;
-	bool getAlive() const { return m_alive; };
-	void kill() { m_alive = false; };
-	bool collidable() const {
-		return m_collidable;
-	};
-	bool sprayable() const {
-		return m_sprayable;
-	};
-	double getYSpeed() {
-		return m_yspeed;
-	}
-	StudentWorld* getWorld() const { return m_worldPtr; };
-	
+	bool getAlive() const;
+	bool collidable() const;
+	bool sprayable() const;
+	double getYSpeed();
+	StudentWorld* getWorld() const;
+	void kill();
+	void setYSpeed(double YSpeed);
+
 private:
 	bool m_alive;
 	bool m_collidable;
@@ -60,48 +48,33 @@ private:
 
 class DynamicActor : public Actor
 {
-public: 
+public:
 	DynamicActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth,
-		double xspeed, double yspeed, int health) :
-		Actor(imageID, startX, startY, dir, size, depth, true, true)
-	{
-		m_xspeed = xspeed;
-		m_health = health;
-	}
-	virtual void doSomething();
-	int getHealth() { return m_health; };
-	void changeHealth(int health)
-	{
-		m_health += health;
-		m_health = std::min(100, m_health);
-	};
-	
-
+		double xspeed, double yspeed, int health, StudentWorld* worldptr);
+	virtual void doSomething() = 0;
+	int getHealth() const;
+	void changeHealth(int health);
 private:
 	double m_xspeed;
-
 	int m_health;
 };
 
 class GhostRacer : public DynamicActor
 {
 public:
-	GhostRacer() :
-		DynamicActor(IID_GHOST_RACER, 128, 32, 90, 4, 0, 0, 0, 100)
-	{
-		m_sprayNum = 10;
-	}
+	GhostRacer(StudentWorld* worldptr);
 	virtual void doSomething();
 
 private:
 	int m_sprayNum;
+	void ghostRacerMove();
 };
 
 class Pedestrian : public DynamicActor
 {
 public:
-	Pedestrian(int imageID, double startX, double startY, double size) :
-		DynamicActor(imageID, startX, startY, 0, size, 0, 0, -4, 2)
+	Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr) :
+		DynamicActor(imageID, startX, startY, 0, size, 0, 0, -4, 2, worldptr)
 	{}
 private:
 };
@@ -109,8 +82,8 @@ private:
 class ZombiePedestrian : public Pedestrian
 {
 public:
-	ZombiePedestrian(double startX, double startY) :
-		Pedestrian(IID_ZOMBIE_PED, startX, startY, 3)
+	ZombiePedestrian(double startX, double startY, StudentWorld* worldptr) :
+		Pedestrian(IID_ZOMBIE_PED, startX, startY, 3, worldptr)
 	{}
 private:
 };
@@ -118,8 +91,8 @@ private:
 class HumanPedestrian : public Pedestrian
 {
 public:
-	HumanPedestrian(double startX, double startY) :
-		Pedestrian(IID_HUMAN_PED, startX, startY, 2)
+	HumanPedestrian(double startX, double startY, StudentWorld* worldptr) :
+		Pedestrian(IID_HUMAN_PED, startX, startY, 2, worldptr)
 	{}
 private:
 };

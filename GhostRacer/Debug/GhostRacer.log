@@ -1,2 +1,3 @@
-﻿  StudentWorld.cpp
+﻿  Actor.cpp
+C:\Users\anton\Documents\Work\Coding\GitHub\GhostRacer\GhostRacer\Actor.cpp(119,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   GhostRacer.vcxproj -> C:\Users\anton\Documents\Work\Coding\GitHub\GhostRacer\Debug\GhostRacer.exe

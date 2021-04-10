@@ -5,22 +5,29 @@
 #include "Actor.h"
 #include <string>
 
-// Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
+class GhostRacer;
+
 
 class StudentWorld : public GameWorld
 {
 public:
-    StudentWorld(std::string assetPath);
-    virtual int init();
-    virtual int move();
-    virtual void cleanUp();
-    virtual ~StudentWorld();
+	StudentWorld(std::string assetPath);
+	virtual int init();
+	virtual int move();
+	virtual void cleanUp();
+	virtual ~StudentWorld();
+	static const int LEFT_EDGE = ROAD_CENTER - ROAD_WIDTH / 2;
+	static const int RIGHT_EDGE = ROAD_CENTER + ROAD_WIDTH / 2;
+	static const int NUM_YELLOW_LINE = VIEW_HEIGHT / SPRITE_HEIGHT;
+	static const int LEFT_WHITE_LINE = LEFT_EDGE + ROAD_WIDTH / 3;
+	static const int RIGHT_WHITE_LINE = RIGHT_EDGE - ROAD_WIDTH / 3;
+	static const int NUM_WHITE_LINE = VIEW_HEIGHT / (4 * SPRITE_HEIGHT);
 
 private:
-    GhostRacer* m_ghostRacer;
-    int m_remainingSouls;
-    int m_bonusPoints;
-    int m_previousBorderY;
+	GhostRacer* m_ghostRacer;
+	int m_remainingSouls;
+	int m_bonusPoints;
+	int m_previousBorderY;
 
 };
 
