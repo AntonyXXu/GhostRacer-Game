@@ -28,7 +28,7 @@ class StudentWorld;
 class Actor : public GraphObject
 {
 public:
-	Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, bool collidable, bool sprayable, StudentWorld* worldptr);
+	Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, double ySpeed, bool collidable, bool sprayable, StudentWorld* worldptr);
 	virtual void doSomething() = 0;
 	bool getAlive() const;
 	bool collidable() const;
@@ -46,13 +46,22 @@ private:
 	StudentWorld* m_worldPtr;
 };
 
+class BorderLine : public Actor
+{
+public:
+	BorderLine(int imageID, double startX, double startY, StudentWorld* worldptr);
+	virtual void doSomething();
+};
+
 class DynamicActor : public Actor
 {
 public:
-	DynamicActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth,
+	DynamicActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, bool spray,
 		double xspeed, double yspeed, int health, StudentWorld* worldptr);
 	virtual void doSomething() = 0;
+	double getXSpeed() const;
 	int getHealth() const;
+	void setXSpeed(double XSpeed);
 	void changeHealth(int health);
 private:
 	double m_xspeed;
@@ -64,7 +73,6 @@ class GhostRacer : public DynamicActor
 public:
 	GhostRacer(StudentWorld* worldptr);
 	virtual void doSomething();
-
 private:
 	int m_sprayNum;
 	void ghostRacerMove();
@@ -74,7 +82,7 @@ class Pedestrian : public DynamicActor
 {
 public:
 	Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr) :
-		DynamicActor(imageID, startX, startY, 0, size, 0, 0, -4, 2, worldptr)
+		DynamicActor(imageID, startX, startY, 0, size, 0, true, 0, -4, 2, worldptr)
 	{}
 private:
 };

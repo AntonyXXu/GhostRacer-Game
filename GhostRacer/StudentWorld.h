@@ -3,9 +3,11 @@
 
 #include "GameWorld.h"
 #include "Actor.h"
+#include <list>
 #include <string>
 
 class GhostRacer;
+class Actor;
 
 
 class StudentWorld : public GameWorld
@@ -16,6 +18,8 @@ public:
 	virtual int move();
 	virtual void cleanUp();
 	virtual ~StudentWorld();
+	
+	GhostRacer* getGhostRacer() const;
 	static const int LEFT_EDGE = ROAD_CENTER - ROAD_WIDTH / 2;
 	static const int RIGHT_EDGE = ROAD_CENTER + ROAD_WIDTH / 2;
 	static const int NUM_YELLOW_LINE = VIEW_HEIGHT / SPRITE_HEIGHT;
@@ -25,9 +29,13 @@ public:
 
 private:
 	GhostRacer* m_ghostRacer;
-	int m_remainingSouls;
+	std::list<Actor*> m_actorList;
+	int m_soulsToSave;
 	int m_bonusPoints;
-	int m_previousBorderY;
+	double m_previousBorderY;
+	void addActors();
+	void addBorderLines();
+	void addBorders_helper(bool yellowLine, double startY);
 
 };
 

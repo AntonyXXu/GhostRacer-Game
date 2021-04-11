@@ -8,13 +8,13 @@
 using namespace std;
 
 //Actor
-Actor::Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, bool collidable, bool sprayable, StudentWorld* worldptr) :
+Actor::Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, double ySpeed, bool collidable, bool sprayable, StudentWorld* worldptr) :
 	GraphObject(imageID, startX, startY, dir, size, depth)
 {
 	m_alive = true;
 	m_collidable = collidable;
 	m_sprayable = sprayable;
-	m_yspeed = 0;
+	m_yspeed = ySpeed;
 	m_worldPtr = worldptr;
 }
 bool Actor::getAlive() const { return m_alive; };
@@ -33,16 +33,32 @@ void Actor::setYSpeed(double YSpeed) {
 	m_yspeed = YSpeed;
 }
 
+//BorderLine
+BorderLine::BorderLine(int imageID, double startX, double startY, StudentWorld* worldptr) :
+	Actor(imageID, startX, startY, 0, 2, 2, -4, false, false, worldptr) {}
+void BorderLine::doSomething() {
+	//Set vertical speed to ghost racer speed
+	double newY = getY() + getYSpeed() - getWorld()->getGhostRacer()->getYSpeed();
+	if (newY > VIEW_HEIGHT) {
+		kill();
+	}
+	moveTo(getX(), newY);
+}
 
 //Dynamic Actor
-DynamicActor::DynamicActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth,
-	double xspeed, double yspeed, int health, StudentWorld* worldptr) :
-	Actor(imageID, startX, startY, dir, size, depth, true, true, worldptr)
+DynamicActor::DynamicActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, bool spray,
+	double xspeed, double ySpeed, int health, StudentWorld* worldptr) :
+	Actor(imageID, startX, startY, dir, size, depth, ySpeed, true, spray, worldptr)
 {
 	m_xspeed = xspeed;
 	m_health = health;
 };
+double DynamicActor::getXSpeed() const { return m_xspeed; };
 int DynamicActor::getHealth() const { return m_health; };
+
+void DynamicActor::setXSpeed(double XSpeed) {
+	m_xspeed = XSpeed;
+}
 void DynamicActor::changeHealth(int health) {
 	m_health += health;
 	m_health = std::min(100, m_health);
@@ -50,7 +66,7 @@ void DynamicActor::changeHealth(int health) {
 
 //GhostRacer
 GhostRacer::GhostRacer(StudentWorld* worldptr) :
-	DynamicActor(IID_GHOST_RACER, 128, 32, 90, 4, 0, 0, 0, 100, worldptr)
+	DynamicActor(IID_GHOST_RACER, 128, 32, 90, 4, 0, false, 0, 0, 100, worldptr)
 {
 	m_sprayNum = 10;
 }
@@ -95,15 +111,14 @@ void GhostRacer::doSomething()
 
 			case KEY_PRESS_UP:
 				if (getYSpeed() < 5) {
-					setYSpeed(getYSpeed() - 1);
+					setYSpeed(getYSpeed() + 1);
 				};
 				break;
 
 			case KEY_PRESS_DOWN:
-				if (getYSpeed() > 1) {
-					setYSpeed(getYSpeed() + 1);
+				if (getYSpeed() > -1) {
+					setYSpeed(getYSpeed() - 1);
 				};
-
 				break;
 
 			default:
@@ -114,9 +129,8 @@ void GhostRacer::doSomething()
 	ghostRacerMove();
 };
 void GhostRacer::ghostRacerMove() {
-	int maxTick = 4;
-
-	int delta_x = cos(getDirection() * M_PI / 180) * maxTick;
+	double maxTick = 4;
+	double delta_x = cos(getDirection() * M_PI / 180) * maxTick;
 	moveTo(getX() + delta_x, getY());
 }
 
