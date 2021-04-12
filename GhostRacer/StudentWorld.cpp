@@ -17,12 +17,18 @@ StudentWorld::StudentWorld(string assetPath)
 	m_ghostRacer = NULL;
 	m_previousBorderY = 0;
 	m_soulsToSave = 2 * getLevel() + 5;
+	for (int i = 0; i < NUM_LANES; i++)
+	{
+		m_botCollisionActor.push_back(VIEW_HEIGHT);
+		m_topCollisionActor.push_back(VIEW_HEIGHT);
+	}
 }
 
 int StudentWorld::init()
 {
 	m_ghostRacer = new GhostRacer(this);
 	m_actorList.push_front(m_ghostRacer);
+
 
 	//init yellow lines. init i as double to multiply sprite
 	for (int i = 0; i < NUM_YELLOW_LINE; i++) {
@@ -40,10 +46,10 @@ int StudentWorld::init()
 
 int StudentWorld::move()
 {
-	// This code is here merely to allow the game to build, run, and terminate after you hit enter.
-	// Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
+	//Reset the collision coordinates
+	fill(m_botCollisionActor.begin(), m_botCollisionActor.end(), VIEW_HEIGHT);
+	fill(m_topCollisionActor.begin(), m_topCollisionActor.end(), 0);
 
-	m_ghostRacer->doSomething();
 
 
 	//Iterate through all actors to doSomething
@@ -51,6 +57,18 @@ int StudentWorld::move()
 	list<Actor*>::iterator itr = m_actorList.begin();
 	while (itr != m_actorList.end()) {
 		(*itr)->doSomething();
+
+		//Update the collision coordinates for ZombieCab Navigation
+		if ((*itr)->collidable())
+		{
+			int actorLane = getLane((*itr)->getX());
+			if (actorLane != -1)
+			{
+				double y_coord = (*itr)->getY();
+				m_botCollisionActor[actorLane] = min(m_botCollisionActor[actorLane], y_coord);
+				m_topCollisionActor[actorLane] = max(m_topCollisionActor[actorLane], y_coord);
+			}
+		}
 		itr++;
 	}
 	//Check if ghostRacer is dead
@@ -86,21 +104,12 @@ int StudentWorld::move()
 
 void StudentWorld::cleanUp()
 {
-	//delete m_ghostRacer;
-	//m_ghostRacer = NULL;
 	while (!m_actorList.empty())
 	{
 		Actor* del = m_actorList.front();
 		delete del;
 		m_actorList.pop_front();
 	}
-	/*list<Actor*>::iterator itr = m_actorList.begin();
-	while (itr != m_actorList.end()) {
-		Actor* del = (*itr);
-		delete del;
-		m_actorList.erase(itr);
-	}*/
-
 }
 
 StudentWorld::~StudentWorld()
@@ -111,17 +120,73 @@ GhostRacer* StudentWorld::getGhostRacer() const
 {
 	return m_ghostRacer;
 }
-bool StudentWorld::checkCollision(Actor* actor_a, Actor* actor_b)
+bool StudentWorld::checkCollision(Actor* actorA, Actor* actorB)
 {
-	double deltaX = abs(actor_a->getX() - actor_b->getX());
-	double deltaY = abs(actor_a->getY() - actor_b->getY());
-	double radiusSum = actor_a->getRadius() + actor_b->getRadius();
+	//Checks collision based on object radius, and x/y coordinates	
+	double deltaX = abs(actorA->getX() - actorB->getX());
+	double deltaY = abs(actorA->getY() - actorB->getY());
+	double radiusSum = actorA->getRadius() + actorB->getRadius();
 	if (deltaX < radiusSum * 0.25 && deltaY < radiusSum * 0.6)
 	{
 		return true;
 	}
 	return false;
 };
+
+int StudentWorld::checkLaneCollisions(Actor* actor)
+{
+	//Check relative speed to GhostRacer
+	//Returns 0 to signal no collision risks
+	//Returns 1 to signal slow down due to actor above
+	//Returns 2 to signal speed up due to actor below
+
+	if (actor->getYSpeed() == getGhostRacer()->getYSpeed())
+	{
+		return 0;
+	}
+
+	list<Actor*>::iterator itr = m_actorList.begin();
+	int lane = getLane(actor->getX());
+	if (actor->getYSpeed() > getGhostRacer()->getYSpeed())
+	{
+		//Check if there is an actor above within 96 pixels
+		while (itr != m_actorList.end())
+		{
+			if (
+				(*itr)->collidable() &&
+				(*itr) != actor &&
+				(*itr)->getY() - actor->getY() < 96 &&
+				(*itr)->getY() - actor->getY() > 0 &&
+				getLane((*itr)->getX()) == lane
+				)
+			{
+				return 1;
+			}
+			itr++;
+		}
+
+		return 0;
+	}
+	else
+	{
+		//Check if there is an actor below within 96 pixels
+		while (itr != m_actorList.end())
+		{
+			if (
+				(*itr)->collidable() &&
+				(*itr) != actor &&
+				actor->getY() - (*itr)->getY() < 96 &&
+				actor->getY() - (*itr)->getY() > 0 &&
+				getLane((*itr)->getX()) == lane
+				)
+			{
+				return 2;
+			}
+			itr++;
+		}
+		return 0;
+	}
+}
 
 void StudentWorld::update_game_text()
 {
@@ -185,27 +250,8 @@ void StudentWorld::addZombieCab()
 	int chanceVehicle = max(40 - getLevel() * 10, 20);
 	if (!randInt(0, chanceVehicle))
 	{
-		//Get all of the collidable objects in each of the lanes.
-		//Populate array with the collidable objects in each lane
-		list<Actor*>::iterator itr = m_actorList.begin();
-		double bottomCollidable[3] = { VIEW_HEIGHT, VIEW_HEIGHT , VIEW_HEIGHT };
-		double topCollidable[3] = { 0,0,0 };
-		while (itr != m_actorList.end())
-		{
-			if ((*itr)->collidable())
-			{
-				int actorLane = getLane((*itr)->getX());
-				if (actorLane != -1)
-				{
-					double y_coord = (*itr)->getY();
-					topCollidable[actorLane] = max(topCollidable[actorLane], y_coord);
-					bottomCollidable[actorLane] = min(bottomCollidable[actorLane], y_coord);
-				}
-			}
-			itr++;
-		}
 		//Create a 3-lane array, and randomize it. Initialize spawning ZombieCab variables
-		int spawnLane;
+		int spawnLane = -1;
 		double ySpawnCoord, ySpawnSpeed, xSpawnCoord;
 		bool spawn = false;
 		int spawnLanes[3] = { 0,1,2 };
@@ -215,13 +261,13 @@ void StudentWorld::addZombieCab()
 		for (int i = 0; i < 3; i++)
 		{
 			int lane = spawnLanes[i];
-			if (bottomCollidable[lane] > VIEW_HEIGHT / 3)
+			if (m_botCollisionActor[lane] > VIEW_HEIGHT / 3)
 			{
 				ySpawnCoord = SPRITE_HEIGHT / 2;
-								ySpawnSpeed = getGhostRacer()->getYSpeed() + randInt(2, 4);
+				ySpawnSpeed = getGhostRacer()->getYSpeed() + randInt(2, 4);
 				spawn = true;
 			}
-			else if (topCollidable[lane] < VIEW_HEIGHT * 2 / 3)
+			else if (m_topCollisionActor[lane] < VIEW_HEIGHT * 2 / 3)
 			{
 				ySpawnCoord = VIEW_HEIGHT - SPRITE_HEIGHT / 2;
 				ySpawnSpeed = getGhostRacer()->getYSpeed() - randInt(2, 4);
@@ -230,25 +276,14 @@ void StudentWorld::addZombieCab()
 			if (spawn)
 			{
 				spawnLane = lane;
+				xSpawnCoord = ROAD_CENTER - ROAD_WIDTH / 3 + ROAD_WIDTH * lane / 3;
 				break;
 			}
 		}
-		//No valid lane found
-		switch (spawnLane)
+		if (!spawn)
 		{
-		case -1:
 			return;
-		case 0:
-			xSpawnCoord = ROAD_CENTER - ROAD_WIDTH / 3;
-			break;
-		case 1:
-			xSpawnCoord = ROAD_CENTER;
-			break;
-		case 2:
-			xSpawnCoord = ROAD_CENTER + ROAD_WIDTH / 3;
-			break;
 		}
-		//Valid lane found. Create ZombieCab		
 		ZombieCab* cab = new ZombieCab(xSpawnCoord, ySpawnCoord, ySpawnSpeed, this);
 		m_actorList.push_front(cab);
 	}

@@ -67,8 +67,13 @@ public:
 	virtual void doSomething() = 0;
 	int getHealth() const;
 	void changeHealth(int health);
+	int getMovePlan() const; 
+	void decrementMovePlan();
+	void setMovePlan(bool sprayed, bool pedestrian);
+	
 private:
 	int m_health;
+	int m_moveplan;
 };
 
 class GhostRacer : public DynamicActor
@@ -87,9 +92,8 @@ class Pedestrian : public DynamicActor
 public:
 	Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr);
 	virtual void doSomething() = 0;
-	void setMovePlan(bool sprayed);
 private:
-	int m_moveplan;
+
 };
 
 class HumanPedestrian : public Pedestrian

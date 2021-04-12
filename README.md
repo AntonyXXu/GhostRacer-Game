@@ -1,12 +1,14 @@
 # GhostRacer
 
-UCLA project applying OOP on a game
+UCLA project applying OOP on a game.
+
+- All objects are from a base Actors class, with a virtual/abstract function to doSomething().
+- All objects are initiated and destroyed within the StudentWorld class, which manages all objects within the class.
+- Reduces iteration within the ZombieCab actor initialization and actions with a private member to hold coordinate data. This goes outside of project specifications, but reduces iterations by O(C), where C is the number of cabs on the screen.
 
 ### TLDR for project specifications:
 
 The course provided all files except Actor.h, Actor.cpp, StudentWorld.h, StudentWorld.cpp.
-
-#### Primary Requirements:
 
 - Create a class StudentWorld to keep track of all objects in the game (GhostRacer, obstacles, pedestrians, projectiles, borders, etc...).
 

@@ -8,7 +8,7 @@
 
 class GhostRacer;
 class Actor;
-
+struct collisionArray;
 
 class StudentWorld : public GameWorld
 {
@@ -18,7 +18,8 @@ public:
 	virtual int move();
 	virtual void cleanUp();
 	virtual ~StudentWorld();
-	bool checkCollision(Actor* actor_a, Actor* actor_b);
+	bool checkCollision(Actor* actorA, Actor* actorB);
+	int checkLaneCollisions(Actor* actor);
 	
 
 	GhostRacer* getGhostRacer() const;
@@ -28,11 +29,14 @@ public:
 	static const int LEFT_WHITE_LINE = LEFT_EDGE + ROAD_WIDTH / 3;
 	static const int RIGHT_WHITE_LINE = RIGHT_EDGE - ROAD_WIDTH / 3;
 	static const int NUM_WHITE_LINE = VIEW_HEIGHT / (4 * SPRITE_HEIGHT);
+	static const int NUM_LANES = 3;
 
 private:
 	//Member Variables
 	GhostRacer* m_ghostRacer;
 	std::list<Actor*> m_actorList;
+	std::vector<double> m_botCollisionActor; 
+	std::vector<double> m_topCollisionActor;
 	int m_soulsToSave;
 	int m_bonusPoints;
 	double m_previousBorderY;
@@ -46,6 +50,11 @@ private:
 	//Helper Functions
 	int getLane(double x_coord);
 	void update_game_text();
+};
+
+struct collisionArray
+{
+public:
 };
 
 #endif // STUDENTWORLD_H_

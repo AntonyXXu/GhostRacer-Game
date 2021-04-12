@@ -75,6 +75,7 @@ DynamicActor::DynamicActor(int imageID, double startX, double startY, int dir, d
 	Actor(imageID, startX, startY, dir, size, depth, xSpeed, ySpeed, true, spray, worldptr)
 {
 	m_health = health;
+	m_moveplan = 0;
 };
 
 int DynamicActor::getHealth() const { return m_health; };
@@ -87,6 +88,61 @@ void DynamicActor::changeHealth(int health) {
 		kill();
 	}
 };
+int DynamicActor::getMovePlan() const
+{
+	return m_moveplan;
+}
+void DynamicActor::decrementMovePlan()
+{
+	m_moveplan -= 1;
+}
+void DynamicActor::setMovePlan(bool sprayed, bool pedestrian)
+{
+	if (sprayed)
+	{
+		setXSpeed(-getXSpeed());
+		getXSpeed() > 0 ? setDirection(180) : setDirection(0);
+		getWorld()->playSound(SOUND_PED_HURT);
+	}
+
+	//Decrement moveplan if greater than 0
+	if (getMovePlan() > 1)
+	{
+		decrementMovePlan();
+	}
+	//Reset moveplan if 0
+	else
+	{
+		//Update X or Y speed based on pedestrian or cab
+		int newSpeed;
+		switch (pedestrian)
+		{
+		case true:
+			//New Speed cannot be 0 as per specs
+			newSpeed = randInt(0, 1);
+			if (newSpeed)
+			{
+				newSpeed = randInt(1, 3);
+				setDirection(0);
+			}
+			else
+			{
+				newSpeed = randInt(-3, -1);
+				setDirection(180);
+			}
+			setXSpeed(newSpeed);
+			m_moveplan = randInt(4, 32);
+			break;
+		case false:
+			//New Speed cannot be 0 as per specs
+			newSpeed = getYSpeed() + randInt(-2, 2);
+			setYSpeed(newSpeed);
+			m_moveplan = randInt(4, 32);
+			break;
+		}
+	}
+}
+
 
 //GhostRacer
 GhostRacer::GhostRacer(StudentWorld* worldptr) :
@@ -164,42 +220,8 @@ void GhostRacer::ghostRacerMove() {
 //Pedestrian
 Pedestrian::Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr) :
 	DynamicActor(imageID, startX, startY, 0, size, 0, true, 0, -4, 2, worldptr) {
-	m_moveplan = 0;
+
 }
-
-void Pedestrian::setMovePlan(bool sprayed)
-{
-	if (sprayed)
-	{
-		setXSpeed(-getXSpeed());
-		getXSpeed() > 0 ? setDirection(180) : setDirection(0);
-		getWorld()->playSound(SOUND_PED_HURT);
-	}
-
-	//Decrement moveplan if greater than 0
-	if (m_moveplan > 1)
-	{
-		m_moveplan -= 1;
-	}
-	//Reset moveplan if 0
-	else
-	{
-		//New Speed cannot be 0 as per specs
-		int newXSpeed = randInt(0, 1);
-		if (newXSpeed)
-		{
-			newXSpeed = randInt(1, 3);
-			setDirection(0);
-		}
-		else
-		{
-			newXSpeed = randInt(-3, -1);
-			setDirection(180);
-		}
-		setXSpeed(newXSpeed);
-		m_moveplan = randInt(4, 32);
-	}
-};
 
 //Human Pedestrian
 HumanPedestrian::HumanPedestrian(double startX, double startY, StudentWorld* worldptr) :
@@ -219,7 +241,7 @@ void HumanPedestrian::doSomething()
 	}
 	//move
 	moveRelative(getWorld()->getGhostRacer());
-	setMovePlan(false);
+	setMovePlan(false, true);
 	return;
 }
 
@@ -266,12 +288,12 @@ void ZombiePedestrian::doSomething()
 	}
 	//move zombie
 	moveRelative(getWorld()->getGhostRacer());
-	setMovePlan(false);
+	setMovePlan(false, true);
 	return;
 }
 
 ZombieCab::ZombieCab(double startX, double startY, double yspeed, StudentWorld* worldptr) :
-	DynamicActor(IID_ZOMBIE_CAB, startX, startY, 90, 4, 0, true, 0, yspeed, 3, worldptr) 
+	DynamicActor(IID_ZOMBIE_CAB, startX, startY, 90, 4, 0, true, 0, yspeed, 3, worldptr)
 {
 	m_hit = false;
 }
@@ -289,6 +311,7 @@ void ZombieCab::doSomething()
 		{
 			m_hit = true;
 			getWorld()->playSound(SOUND_VEHICLE_CRASH);
+			getWorld()->getGhostRacer()->changeHealth(-20);
 			if (getX() <= getWorld()->getGhostRacer()->getX())
 			{
 				setXSpeed(-5);
@@ -305,4 +328,23 @@ void ZombieCab::doSomething()
 	}
 	//move zombie cab
 	moveRelative(getWorld()->getGhostRacer());
+	//Test collisions. 0 is not near collisions, 1 is to require slowing down, 2 is to require speeding up.
+	switch (getWorld()->checkLaneCollisions(this))
+	{
+	case 0:
+		//No collisions, act on its movement plan
+		decrementMovePlan();
+		setMovePlan(false, false);
+		break;
+	case 1:
+		//Actor ahead, slow down by half a pixel
+		setYSpeed(getYSpeed() - 0.5);
+	case 2:
+		//Actor behind, speed up by half a pixel
+		setYSpeed(getYSpeed() + 0.5);
+	}
+
+
+
+
 }
