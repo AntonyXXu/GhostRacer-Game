@@ -20,7 +20,8 @@ public:
 	virtual ~StudentWorld();
 	bool checkCollision(Actor* actorA, Actor* actorB);
 	int checkLaneCollisions(Actor* actor);
-	
+	void savedSoul();
+	void addToActorList(Actor* actor);
 
 	GhostRacer* getGhostRacer() const;
 	static const int LEFT_EDGE = ROAD_CENTER - ROAD_WIDTH / 2;
@@ -46,6 +47,9 @@ private:
 	void addHumanPedestrian();
 	void addZombiePedestrian();
 	void addZombieCab();
+	void addOilSlick();
+	void addSprayBottle();
+	void addLostSoul();
 	void addBorders_helper(bool yellowLine, double startY);
 	//Helper Functions
 	int getLane(double x_coord);

@@ -16,11 +16,10 @@ GraphObject
 					HumanPedestrian
 				ZombieCab
 			StaticActor
-				Goodie
-					OilSlick
-					HolyWater
-					LostSoul
-			Spray
+				OilSlick
+				SprayBottle
+				LostSoul
+			HolyWater
 **********************************/
 
 class StudentWorld;
@@ -81,7 +80,9 @@ class GhostRacer : public DynamicActor
 public:
 	GhostRacer(StudentWorld* worldptr);
 	virtual void doSomething();
-	int getSpray();
+	void spin();
+	int getSpray() const;
+	void changeSpray(int change);
 private:
 	int m_sprayNum;
 	void ghostRacerMove();
@@ -119,6 +120,44 @@ public:
 	virtual void doSomething();
 private:
 	bool m_hit;
+};
+
+class StaticActor : public Actor
+{
+public:
+	StaticActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth,
+		bool sprayable, StudentWorld* worldptr);
+	virtual void doSomething() = 0;
+};
+
+class OilSlick : public StaticActor
+{
+public:
+	OilSlick(double startX, double startY, double size, StudentWorld* worldptr);
+	virtual void doSomething();
+};
+
+class SprayBottle : public StaticActor
+{
+public:
+	SprayBottle(double startX, double startY, StudentWorld* worldptr);
+	virtual void doSomething();
+};
+
+class LostSoul : public StaticActor
+{
+public:
+	LostSoul(double startX, double startY, StudentWorld* worldptr);
+	virtual void doSomething();
+};
+
+class HolyWater : public Actor
+{
+public:
+	HolyWater(double startX, double startY, int dir, StudentWorld* worldptr);
+	virtual void doSomething();
+private:
+	int m_travel;
 };
 
 #endif // ACTOR_H_

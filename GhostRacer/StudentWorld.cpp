@@ -13,10 +13,7 @@ GameWorld* createStudentWorld(string assetPath)
 StudentWorld::StudentWorld(string assetPath)
 	: GameWorld(assetPath)
 {
-	m_bonusPoints = 5000;
 	m_ghostRacer = NULL;
-	m_previousBorderY = 0;
-	m_soulsToSave = 2 * getLevel() + 5;
 	for (int i = 0; i < NUM_LANES; i++)
 	{
 		m_botCollisionActor.push_back(VIEW_HEIGHT);
@@ -27,8 +24,10 @@ StudentWorld::StudentWorld(string assetPath)
 int StudentWorld::init()
 {
 	m_ghostRacer = new GhostRacer(this);
-	m_actorList.push_front(m_ghostRacer);
-
+	addToActorList(m_ghostRacer);
+	m_bonusPoints = 5000;
+	m_soulsToSave = 2 * getLevel() + 5;
+	m_previousBorderY = 0;
 
 	//init yellow lines. init i as double to multiply sprite
 	for (int i = 0; i < NUM_YELLOW_LINE; i++) {
@@ -58,6 +57,22 @@ int StudentWorld::move()
 	while (itr != m_actorList.end()) {
 		(*itr)->doSomething();
 
+		//Check if ghostRacer is dead
+		if (!m_ghostRacer->getAlive())
+		{
+			playSound(SOUND_PLAYER_DIE);
+			decLives();
+			return GWSTATUS_PLAYER_DIED;
+		}
+
+		//Check if the level is completed
+		if (m_soulsToSave <= 0)
+		{
+			increaseScore(m_bonusPoints);
+			playSound(SOUND_FINISHED_LEVEL);
+			return GWSTATUS_FINISHED_LEVEL;
+		}
+
 		//Update the collision coordinates for ZombieCab Navigation
 		if ((*itr)->collidable())
 		{
@@ -71,13 +86,7 @@ int StudentWorld::move()
 		}
 		itr++;
 	}
-	//Check if ghostRacer is dead
-	if (!m_ghostRacer->getAlive())
-	{
-		playSound(SOUND_PLAYER_DIE);
-		decLives();
-		return GWSTATUS_PLAYER_DIED;
-	}
+
 	//Remove dead actors
 	itr = m_actorList.begin();
 	while (itr != m_actorList.end()) {
@@ -188,18 +197,26 @@ int StudentWorld::checkLaneCollisions(Actor* actor)
 	}
 }
 
+void StudentWorld::savedSoul()
+{
+	m_soulsToSave -= 1;
+}
+void StudentWorld::addToActorList(Actor* actor)
+{
+	m_actorList.push_front(actor);
+}
 void StudentWorld::update_game_text()
 {
 	string score = to_string(getScore());
 	string level = to_string(getLevel());
+	string souls = to_string(m_soulsToSave);
 	string lives = to_string(getLives());
 	string health = to_string(m_ghostRacer->getHealth());
 	string sprays = to_string(m_ghostRacer->getSpray());
 	string bonus = to_string(m_bonusPoints);
 
-	setGameStatText("Score: " + score + "  " + "Level: " + level + "  " +
-		"Lives: " + lives + "  " + "Health: " + health + "  " +
-		"Sprays: " + sprays + "  " + "Bonus Points: " + bonus);
+	setGameStatText("Score: " + score + "  " + "Lvl: " + level + "  " + "SoulsToSave: " + souls + "  " + 
+		"Lives: " + lives + "  " + "Health: " + health + "  " + "Sprays: " + sprays + "  " + "Bonus: " + bonus);
 }
 
 void StudentWorld::addActors()
@@ -208,6 +225,9 @@ void StudentWorld::addActors()
 	addHumanPedestrian();
 	addZombiePedestrian();
 	addZombieCab();
+	addOilSlick();
+	addSprayBottle();
+	addLostSoul();
 }
 
 void StudentWorld::addBorderLines()
@@ -230,7 +250,7 @@ void StudentWorld::addHumanPedestrian()
 	if (!randInt(0, ChanceHumanPed))
 	{
 		HumanPedestrian* human = new HumanPedestrian(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this);
-		m_actorList.push_front(human);
+		addToActorList(human);
 	}
 
 }
@@ -240,14 +260,13 @@ void StudentWorld::addZombiePedestrian()
 	if (!randInt(0, ChanceZombiePed))
 	{
 		ZombiePedestrian* human = new ZombiePedestrian(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this);
-		m_actorList.push_front(human);
+		addToActorList(human);
 	}
 }
 
 void StudentWorld::addZombieCab()
 {
-	//int chanceVehicle = max(100 - getLevel() * 10, 20);
-	int chanceVehicle = max(40 - getLevel() * 10, 20);
+	int chanceVehicle = max(100 - getLevel() * 10, 20);
 	if (!randInt(0, chanceVehicle))
 	{
 		//Create a 3-lane array, and randomize it. Initialize spawning ZombieCab variables
@@ -285,9 +304,44 @@ void StudentWorld::addZombieCab()
 			return;
 		}
 		ZombieCab* cab = new ZombieCab(xSpawnCoord, ySpawnCoord, ySpawnSpeed, this);
-		m_actorList.push_front(cab);
+		addToActorList(cab);
 	}
 }
+
+void StudentWorld::addOilSlick()
+{
+	int  chanceOilSlick = max(150 - getLevel()*10, 40);
+	if (!randInt(0, chanceOilSlick))
+	{
+		double xCoord = randInt(LEFT_EDGE, RIGHT_EDGE);
+		int size = randInt(2, 5);
+		OilSlick* oil = new OilSlick(xCoord, VIEW_HEIGHT, size, this);
+		addToActorList(oil);
+	}
+}
+
+void StudentWorld::addSprayBottle()
+{
+	int chanceSprayBottle = 100 + getLevel() * 10;
+	if (!randInt(0, chanceSprayBottle))
+	{
+		double xCoord = randInt(LEFT_EDGE, RIGHT_EDGE);
+		SprayBottle* bottle = new SprayBottle(xCoord, VIEW_HEIGHT, this);
+		addToActorList(bottle);
+	}
+}
+
+void StudentWorld::addLostSoul()
+{
+	int chanceLostSoul = 100;
+	if (!randInt(0, chanceLostSoul))
+	{
+		double xCoord = randInt(LEFT_EDGE, RIGHT_EDGE);
+		LostSoul* bottle = new LostSoul(xCoord, VIEW_HEIGHT, this);
+		addToActorList(bottle);
+	}
+}
+
 
 void StudentWorld::addBorders_helper(bool yellowLine, double startY)
 {
@@ -299,14 +353,14 @@ void StudentWorld::addBorders_helper(bool yellowLine, double startY)
 	case true:
 		left = new BorderLine(IID_YELLOW_BORDER_LINE, LEFT_EDGE, startY, this);
 		right = new BorderLine(IID_YELLOW_BORDER_LINE, RIGHT_EDGE, startY, this);
-		m_actorList.push_front(left);
-		m_actorList.push_front(right);
+		addToActorList(left);
+		addToActorList(right);
 		break;
 	case false:
 		left = new BorderLine(IID_WHITE_BORDER_LINE, LEFT_WHITE_LINE, startY, this);
 		right = new BorderLine(IID_WHITE_BORDER_LINE, RIGHT_WHITE_LINE, startY, this);
-		m_actorList.push_back(left);
-		m_actorList.push_back(right);
+		addToActorList(left);
+		addToActorList(right);
 		m_previousBorderY = startY;
 		break;
 	}

@@ -114,7 +114,7 @@ void DynamicActor::setMovePlan(bool sprayed, bool pedestrian)
 	else
 	{
 		//Update X or Y speed based on pedestrian or cab
-		int newSpeed;
+		double newSpeed;
 		switch (pedestrian)
 		{
 		case true:
@@ -171,10 +171,21 @@ void GhostRacer::doSomething()
 		int input;
 		if (getWorld()->getKey(input))
 		{
+			double xCoord, yCoord;
+			HolyWater* sprayHolyWater;
 			switch (input)
 			{
 			case KEY_PRESS_SPACE:
-				//create holy
+				//create holy water projectile
+				if (m_sprayNum>0)
+				{
+					xCoord = getX() + SPRITE_HEIGHT * cos(getDirection() * M_PI / 180);
+					yCoord = getY() + SPRITE_HEIGHT * sin(getDirection() * M_PI / 180);
+					sprayHolyWater = new HolyWater(xCoord, yCoord, getDirection(), getWorld());
+					getWorld()->addToActorList(sprayHolyWater);
+					getWorld()->playSound(SOUND_PLAYER_SPRAY);
+					m_sprayNum -= 1;
+				}
 				break;
 
 			case KEY_PRESS_LEFT:
@@ -208,8 +219,25 @@ void GhostRacer::doSomething()
 	}
 	ghostRacerMove();
 };
-int GhostRacer::getSpray() {
+void GhostRacer::spin()
+{
+	//Randomly spin clockwise or counterclockwise by 5-20deg, but between 60 to 120deg
+	int newDirection = randInt(5, 20);
+	if (randInt(0, 1))
+	{
+		newDirection *= -1;
+	}
+	newDirection = getDirection() + newDirection;
+	newDirection = min(120, max(60, newDirection));
+	setDirection(newDirection);
+}
+
+int GhostRacer::getSpray() const {
 	return m_sprayNum;
+}
+void GhostRacer::changeSpray(int change)
+{
+	m_sprayNum += change;
 }
 void GhostRacer::ghostRacerMove() {
 	double maxTick = 4;
@@ -343,8 +371,82 @@ void ZombieCab::doSomething()
 		//Actor behind, speed up by half a pixel
 		setYSpeed(getYSpeed() + 0.5);
 	}
+}
+
+StaticActor::StaticActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth,
+	bool sprayable, StudentWorld* worldptr) :
+	Actor(imageID, startX, startY, dir, size, depth, 0, -4, false, sprayable, worldptr) {}
 
 
+OilSlick::OilSlick(double startX, double startY, double size, StudentWorld* worldptr) :
+	StaticActor(IID_OIL_SLICK, startX, startY, 0, size, 2, false, worldptr) {}
+
+void OilSlick::doSomething()
+{
+	moveRelative(getWorld()->getGhostRacer());
+	if (getWorld()->checkCollision(this, getWorld()->getGhostRacer()))
+	{
+		getWorld()->getGhostRacer()->spin();
+		getWorld()->playSound(SOUND_OIL_SLICK);
+		return;
+	}
+}
+
+SprayBottle::SprayBottle(double startX, double startY, StudentWorld* worldptr) :
+	StaticActor(IID_HOLY_WATER_GOODIE, startX, startY, 90, 2, 2, true, worldptr) {}
+
+void SprayBottle::doSomething()
+{
+	moveRelative(getWorld()->getGhostRacer());
+	if (getWorld()->checkCollision(this, getWorld()->getGhostRacer()))
+	{
+		getWorld()->getGhostRacer()->changeSpray(10);
+		getWorld()->playSound(SOUND_GOT_GOODIE);
+		getWorld()->increaseScore(50);
+		kill();
+		return;
+	}
+}
+
+LostSoul::LostSoul(double startX, double startY, StudentWorld* worldptr) :
+	StaticActor(IID_SOUL_GOODIE, startX, startY, 0, 4, 2, false, worldptr) {}
+
+void LostSoul::doSomething()
+{
+	moveRelative(getWorld()->getGhostRacer());
+	if (getWorld()->checkCollision(this, getWorld()->getGhostRacer()))
+	{
+		getWorld()->savedSoul();
+		getWorld()->playSound(SOUND_GOT_SOUL);
+		getWorld()->increaseScore(100);
+		kill();
+		return;
+	}
+	setDirection(getDirection() + 10);
+}
+
+HolyWater::HolyWater(double startX, double startY, int dir, StudentWorld* worldptr) :
+	Actor(IID_HOLY_WATER_PROJECTILE, startX, startY, dir, 1, 1, 0, 0, false, false, worldptr)
+{
+	m_travel = 160;
+}
+
+void HolyWater::doSomething()
+{
+	if (!getAlive())
+	{
+		return;
+	}
+
+	
+	
+	//Move Forward
+	moveForward(SPRITE_HEIGHT);
+	m_travel -= SPRITE_HEIGHT;
+	if (offScreen() || m_travel <= 0)
+	{
+		kill();
+	}
 
 
 }
