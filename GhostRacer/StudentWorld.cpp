@@ -14,6 +14,9 @@ StudentWorld::StudentWorld(string assetPath)
 	: GameWorld(assetPath)
 {
 	m_ghostRacer = NULL;
+	m_bonusPoints = 5000;
+	m_soulsToSave = 2 * getLevel() + 5;
+	m_previousBorderY = 0;
 	for (int i = 0; i < NUM_LANES; i++)
 	{
 		m_botCollisionActor.push_back(VIEW_HEIGHT);
@@ -141,6 +144,23 @@ bool StudentWorld::checkCollision(Actor* actorA, Actor* actorB)
 	}
 	return false;
 };
+bool StudentWorld::checkHolyWaterCollision(Actor* holyWaterSpray)
+{
+	list<Actor*>::iterator itr = m_actorList.begin();
+	while (itr != m_actorList.end())
+	{
+		
+		if ((*itr)->sprayable() &&
+			checkCollision(holyWaterSpray, (*itr)))
+		{
+			(*itr)->sprayedHolyWater();
+			return true;
+		}
+		itr++;
+	}
+	return false;
+}
+
 
 int StudentWorld::checkLaneCollisions(Actor* actor)
 {

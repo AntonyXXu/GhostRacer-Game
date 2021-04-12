@@ -17,6 +17,7 @@ GraphObject
 				ZombieCab
 			StaticActor
 				OilSlick
+				HealingGoodie
 				SprayBottle
 				LostSoul
 			HolyWater
@@ -41,6 +42,7 @@ public:
 	void setXSpeed(double XSpeed);
 	void setYSpeed(double YSpeed);
 	void moveRelative(Actor* otherActor);
+	virtual void sprayedHolyWater();
 
 private:
 	bool m_alive;
@@ -92,7 +94,6 @@ class Pedestrian : public DynamicActor
 {
 public:
 	Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr);
-	virtual void doSomething() = 0;
 private:
 
 };
@@ -102,6 +103,7 @@ class HumanPedestrian : public Pedestrian
 public:
 	HumanPedestrian(double startX, double startY, StudentWorld* worldptr);
 	virtual void doSomething();
+	virtual void sprayedHolyWater();
 };
 
 class ZombiePedestrian : public Pedestrian
@@ -109,6 +111,7 @@ class ZombiePedestrian : public Pedestrian
 public:
 	ZombiePedestrian(double startX, double startY, StudentWorld* worldptr);
 	virtual void doSomething();
+	virtual void sprayedHolyWater();
 private:
 	int m_grunt;
 };
@@ -118,6 +121,7 @@ class ZombieCab : public DynamicActor
 public:
 	ZombieCab(double startX, double startY, double yspeed, StudentWorld* worldptr);
 	virtual void doSomething();
+	virtual void sprayedHolyWater();
 private:
 	bool m_hit;
 };
@@ -137,11 +141,20 @@ public:
 	virtual void doSomething();
 };
 
+class HealingGoodie : public StaticActor
+{
+public:
+	HealingGoodie(double startX, double startY, StudentWorld* worldptr);
+	virtual void doSomething();
+	virtual void sprayedHolyWater();
+};
+
 class SprayBottle : public StaticActor
 {
 public:
 	SprayBottle(double startX, double startY, StudentWorld* worldptr);
 	virtual void doSomething();
+	virtual void sprayedHolyWater();
 };
 
 class LostSoul : public StaticActor

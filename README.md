@@ -1,6 +1,6 @@
 # GhostRacer
 
-UCLA project applying OOP on a game.
+Project applying OOP on a game. Project specifications attached, based on UCLA CS-32 Project (https://web.archive.org/web/20210210163124/http://web.cs.ucla.edu/classes/winter21/cs32/)
 
 - All objects are from a base Actors class, with a virtual/abstract function to doSomething().
 - All objects are initiated and destroyed within the StudentWorld class, which manages all objects within the class.

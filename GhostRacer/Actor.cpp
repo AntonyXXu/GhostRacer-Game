@@ -60,6 +60,11 @@ void Actor::moveRelative(Actor* other_actor)
 	}
 }
 
+void Actor::sprayedHolyWater()
+{
+	return;
+}
+
 //BorderLine
 BorderLine::BorderLine(int imageID, double startX, double startY, StudentWorld* worldptr) :
 	Actor(imageID, startX, startY, 0, 2, 2, 0, -4, false, false, worldptr) {}
@@ -101,8 +106,9 @@ void DynamicActor::setMovePlan(bool sprayed, bool pedestrian)
 	if (sprayed)
 	{
 		setXSpeed(-getXSpeed());
-		getXSpeed() > 0 ? setDirection(180) : setDirection(0);
+		getXSpeed() > 0 ? setDirection(0) : setDirection(180);
 		getWorld()->playSound(SOUND_PED_HURT);
+		return;
 	}
 
 	//Decrement moveplan if greater than 0
@@ -177,7 +183,7 @@ void GhostRacer::doSomething()
 			{
 			case KEY_PRESS_SPACE:
 				//create holy water projectile
-				if (m_sprayNum>0)
+				if (m_sprayNum > 0)
 				{
 					xCoord = getX() + SPRITE_HEIGHT * cos(getDirection() * M_PI / 180);
 					yCoord = getY() + SPRITE_HEIGHT * sin(getDirection() * M_PI / 180);
@@ -248,7 +254,6 @@ void GhostRacer::ghostRacerMove() {
 //Pedestrian
 Pedestrian::Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr) :
 	DynamicActor(imageID, startX, startY, 0, size, 0, true, 0, -4, 2, worldptr) {
-
 }
 
 //Human Pedestrian
@@ -273,6 +278,13 @@ void HumanPedestrian::doSomething()
 	return;
 }
 
+void HumanPedestrian::sprayedHolyWater()
+{
+	setMovePlan(true, true);
+	getWorld()->playSound(SOUND_PED_HURT);
+}
+
+//Zombie Pedestrian
 ZombiePedestrian::ZombiePedestrian(double startX, double startY, StudentWorld* worldptr) :
 	Pedestrian(IID_ZOMBIE_PED, startX, startY, 3, worldptr) {
 	m_grunt = 0;
@@ -287,6 +299,7 @@ void ZombiePedestrian::doSomething()
 	{
 		getWorld()->getGhostRacer()->changeHealth(-5);
 		getWorld()->playSound(SOUND_PED_DIE);
+		getWorld()->increaseScore(150);
 		kill();
 		return;
 	}
@@ -320,6 +333,27 @@ void ZombiePedestrian::doSomething()
 	return;
 }
 
+void ZombiePedestrian::sprayedHolyWater()
+{
+	setMovePlan(true, true);
+	if (getHealth() > 1)
+	{
+		changeHealth(-1);
+		getWorld()->playSound(SOUND_PED_HURT);
+	}
+	else
+	{
+		getWorld()->playSound(SOUND_PED_DIE);
+		if (!randInt(0, 4))
+		{
+			HealingGoodie* heal = new HealingGoodie(getX(), getY(), getWorld());
+			getWorld()->addToActorList(heal);
+		}
+		kill();
+	}
+}
+
+//ZombieCab
 ZombieCab::ZombieCab(double startX, double startY, double yspeed, StudentWorld* worldptr) :
 	DynamicActor(IID_ZOMBIE_CAB, startX, startY, 90, 4, 0, true, 0, yspeed, 3, worldptr)
 {
@@ -373,11 +407,37 @@ void ZombieCab::doSomething()
 	}
 }
 
+void ZombieCab::sprayedHolyWater()
+{
+
+	if (getHealth() > 1)
+	{
+		getWorld()->playSound(SOUND_VEHICLE_HURT);
+		changeHealth(-1);
+	
+	}
+	else
+	{
+		getWorld()->playSound(SOUND_VEHICLE_DIE); 
+		getWorld()->increaseScore(200);
+		if (!randInt(0, 4))
+		{
+			OilSlick* oil = new OilSlick(getX(), getY(), randInt(2, 5), getWorld());
+			getWorld()->addToActorList(oil);
+		}
+
+		kill();
+		
+	}
+
+}
+
+//Static Actor
 StaticActor::StaticActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth,
 	bool sprayable, StudentWorld* worldptr) :
 	Actor(imageID, startX, startY, dir, size, depth, 0, -4, false, sprayable, worldptr) {}
 
-
+//Oil Slick
 OilSlick::OilSlick(double startX, double startY, double size, StudentWorld* worldptr) :
 	StaticActor(IID_OIL_SLICK, startX, startY, 0, size, 2, false, worldptr) {}
 
@@ -392,6 +452,26 @@ void OilSlick::doSomething()
 	}
 }
 
+HealingGoodie::HealingGoodie(double startX, double startY, StudentWorld* worldptr) :
+	StaticActor(IID_HEAL_GOODIE, startX, startY, 0, 1, 2, true, worldptr) {}
+void HealingGoodie::doSomething()
+{
+	moveRelative(getWorld()->getGhostRacer());
+	if (getWorld()->checkCollision(this, getWorld()->getGhostRacer()))
+	{
+		getWorld()->getGhostRacer()->changeHealth(10);
+		getWorld()->playSound(SOUND_GOT_GOODIE);
+		getWorld()->increaseScore(250);
+		kill();
+		return;
+	}
+}
+void HealingGoodie::sprayedHolyWater()
+{
+	kill();
+}
+
+//Spray Bottle
 SprayBottle::SprayBottle(double startX, double startY, StudentWorld* worldptr) :
 	StaticActor(IID_HOLY_WATER_GOODIE, startX, startY, 90, 2, 2, true, worldptr) {}
 
@@ -407,7 +487,12 @@ void SprayBottle::doSomething()
 		return;
 	}
 }
+void SprayBottle::sprayedHolyWater()
+{
+	kill();
+}
 
+//Lost Soul
 LostSoul::LostSoul(double startX, double startY, StudentWorld* worldptr) :
 	StaticActor(IID_SOUL_GOODIE, startX, startY, 0, 4, 2, false, worldptr) {}
 
@@ -425,6 +510,7 @@ void LostSoul::doSomething()
 	setDirection(getDirection() + 10);
 }
 
+//Holy Water
 HolyWater::HolyWater(double startX, double startY, int dir, StudentWorld* worldptr) :
 	Actor(IID_HOLY_WATER_PROJECTILE, startX, startY, dir, 1, 1, 0, 0, false, false, worldptr)
 {
@@ -438,15 +524,18 @@ void HolyWater::doSomething()
 		return;
 	}
 
-	
-	
-	//Move Forward
+	//check for collision with another actor
+	if (getWorld()->checkHolyWaterCollision(this))
+	{
+		kill();
+		return;
+	}
+
+	//Has not collided, move forward up to max distance
 	moveForward(SPRITE_HEIGHT);
 	m_travel -= SPRITE_HEIGHT;
 	if (offScreen() || m_travel <= 0)
 	{
 		kill();
 	}
-
-
 }

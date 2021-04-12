@@ -8,7 +8,7 @@
 
 class GhostRacer;
 class Actor;
-struct collisionArray;
+
 
 class StudentWorld : public GameWorld
 {
@@ -19,6 +19,7 @@ public:
 	virtual void cleanUp();
 	virtual ~StudentWorld();
 	bool checkCollision(Actor* actorA, Actor* actorB);
+	bool checkHolyWaterCollision(Actor* holyWaterSpray);
 	int checkLaneCollisions(Actor* actor);
 	void savedSoul();
 	void addToActorList(Actor* actor);
