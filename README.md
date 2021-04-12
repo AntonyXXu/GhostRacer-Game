@@ -8,7 +8,7 @@ Project applying OOP on a game. Project specifications attached, based on UCLA C
 
 ### TLDR for project specifications:
 
-The course provided all files except Actor.h, Actor.cpp, StudentWorld.h, StudentWorld.cpp.
+The course provided all files except Actor.h, Actor.cpp, StudentWorld.h, StudentWorld.cpp, and all objects and classes can be found in those four files.
 
 - Create a class StudentWorld to keep track of all objects in the game (GhostRacer, obstacles, pedestrians, projectiles, borders, etc...).
 
