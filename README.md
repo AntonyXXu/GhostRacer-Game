@@ -6,6 +6,8 @@ Project applying OOP on a game. Project specifications attached, based on UCLA C
 - All objects are initiated and destroyed within the StudentWorld class, which manages all objects within the class.
 - Reduces iteration within the ZombieCab actor initialization and actions with a private member to hold coordinate data. This goes outside of project specifications, but reduces iterations by O(C), where C is the number of cabs on the screen.
 
+Build must retarget solution to SDK Version 10.0.17763.0
+
 ### TLDR for project specifications:
 
 The course provided all files except Actor.h, Actor.cpp, StudentWorld.h, StudentWorld.cpp, and all objects and classes can be found in those four files.
