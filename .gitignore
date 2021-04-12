@@ -14,7 +14,6 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 
 # Fortran module files
@@ -32,6 +31,7 @@
 *.out
 *.app
 
-# Debug and Release Folders
-Debug
-Release
+# Directories
+Debug/
+Release/
+
