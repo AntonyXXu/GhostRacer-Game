@@ -8,19 +8,19 @@
 /**********************************
 GraphObject
 		Actor
+			Borderline
 			DynamicActor
 				GhostRacer
-				ZombieCab
 				Pedestrian
 					ZombiePedestrain
 					HumanPedestrian
+				ZombieCab
 			StaticActor
 				Goodie
 					OilSlick
 					HolyWater
 					LostSoul
 			Spray
-			Borderline
 **********************************/
 
 class StudentWorld;
@@ -28,20 +28,26 @@ class StudentWorld;
 class Actor : public GraphObject
 {
 public:
-	Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, double ySpeed, bool collidable, bool sprayable, StudentWorld* worldptr);
+	Actor(int imageID, double startX, double startY, int dir, double size, unsigned int depth,
+		double xSpeed, double ySpeed, bool collidable, bool sprayable, StudentWorld* worldptr);
 	virtual void doSomething() = 0;
 	bool getAlive() const;
 	bool collidable() const;
 	bool sprayable() const;
-	double getYSpeed();
+	double getXSpeed() const;
+	double getYSpeed() const;
 	StudentWorld* getWorld() const;
+	bool offScreen() const;
 	void kill();
+	void setXSpeed(double XSpeed);
 	void setYSpeed(double YSpeed);
+	void moveRelative(Actor* otherActor);
 
 private:
 	bool m_alive;
 	bool m_collidable;
 	bool m_sprayable;
+	double m_xspeed;
 	double m_yspeed;
 	StudentWorld* m_worldPtr;
 };
@@ -57,14 +63,11 @@ class DynamicActor : public Actor
 {
 public:
 	DynamicActor(int imageID, double startX, double startY, int dir, double size, unsigned int depth, bool spray,
-		double xspeed, double yspeed, int health, StudentWorld* worldptr);
+		double xSpeed, double yspeed, int health, StudentWorld* worldptr);
 	virtual void doSomething() = 0;
-	double getXSpeed() const;
 	int getHealth() const;
-	void setXSpeed(double XSpeed);
 	void changeHealth(int health);
 private:
-	double m_xspeed;
 	int m_health;
 };
 
@@ -73,6 +76,7 @@ class GhostRacer : public DynamicActor
 public:
 	GhostRacer(StudentWorld* worldptr);
 	virtual void doSomething();
+	int getSpray();
 private:
 	int m_sprayNum;
 	void ghostRacerMove();
@@ -81,28 +85,36 @@ private:
 class Pedestrian : public DynamicActor
 {
 public:
-	Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr) :
-		DynamicActor(imageID, startX, startY, 0, size, 0, true, 0, -4, 2, worldptr)
-	{}
+	Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr);
+	virtual void doSomething() = 0;
+	void setMovePlan(bool sprayed);
 private:
-};
-
-class ZombiePedestrian : public Pedestrian
-{
-public:
-	ZombiePedestrian(double startX, double startY, StudentWorld* worldptr) :
-		Pedestrian(IID_ZOMBIE_PED, startX, startY, 3, worldptr)
-	{}
-private:
+	int m_moveplan;
 };
 
 class HumanPedestrian : public Pedestrian
 {
 public:
-	HumanPedestrian(double startX, double startY, StudentWorld* worldptr) :
-		Pedestrian(IID_HUMAN_PED, startX, startY, 2, worldptr)
-	{}
+	HumanPedestrian(double startX, double startY, StudentWorld* worldptr);
+	virtual void doSomething();
+};
+
+class ZombiePedestrian : public Pedestrian
+{
+public:
+	ZombiePedestrian(double startX, double startY, StudentWorld* worldptr);
+	virtual void doSomething();
 private:
+	int m_grunt;
+};
+
+class ZombieCab : public DynamicActor
+{
+public:
+	ZombieCab(double startX, double startY, double yspeed, StudentWorld* worldptr);
+	virtual void doSomething();
+private:
+	bool m_hit;
 };
 
 #endif // ACTOR_H_
