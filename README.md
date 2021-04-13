@@ -5,6 +5,7 @@ Project applying OOP on a game. Project specifications attached, based on UCLA C
 - All objects are from a base Actors class, with a virtual/abstract function to doSomething().
 - All objects are initiated and destroyed within the StudentWorld class, which manages all objects within the class.
 - Reduces iteration within the ZombieCab actor initialization and actions with a private member to hold coordinate data. This goes outside of project specifications, but reduces iterations by O(C), where C is the number of cabs on the screen.
+- Main red car (Ghost Racer) can change its speed, shoot holy water, and collect blue souls to win the game. Holy water can destroy zombie cabs, zombie pedestrians. Hitting a human pedestrian ends the game.
 
 Build must retarget solution to SDK Version 10.0.17763.0
 
