@@ -54,7 +54,7 @@ private:
 	void addBorders_helper(bool yellowLine, double startY);
 	//Helper Functions
 	int getLane(double x_coord);
-	void update_game_text();
+	void updateGameText();
 };
 
 struct collisionArray

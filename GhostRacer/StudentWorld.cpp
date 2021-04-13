@@ -108,7 +108,7 @@ int StudentWorld::move()
 	//Add new actors 
 	addActors();
 
-	update_game_text();
+	updateGameText();
 	m_bonusPoints -= 1;
 	return GWSTATUS_CONTINUE_GAME;
 	//return GWSTATUS_PLAYER_DIED;
@@ -225,7 +225,7 @@ void StudentWorld::addToActorList(Actor* actor)
 {
 	m_actorList.push_front(actor);
 }
-void StudentWorld::update_game_text()
+void StudentWorld::updateGameText()
 {
 	string score = to_string(getScore());
 	string level = to_string(getLevel());
