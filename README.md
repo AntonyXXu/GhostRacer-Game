@@ -8,6 +8,9 @@ Project applying OOP on a game. Project specifications attached, based on UCLA C
 
 Build must retarget solution to SDK Version 10.0.17763.0
 
+### Demo
+![ghostracer_demo](https://user-images.githubusercontent.com/77988513/114477759-04b31680-9bba-11eb-897b-a882571c4248.gif)
+
 ### TLDR for project specifications:
 
 The course provided all files except Actor.h, Actor.cpp, StudentWorld.h, StudentWorld.cpp, and all objects and classes can be found in those four files.
