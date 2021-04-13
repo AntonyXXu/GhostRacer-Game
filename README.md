@@ -2,6 +2,7 @@
 
 Project applying OOP on a game. Project specifications attached, based on UCLA CS-32 Project (https://web.archive.org/web/20210210163124/http://web.cs.ucla.edu/classes/winter21/cs32/)
 
+- I created the Actors.h, Actors.cpp, StudentWorld.h, StudentWorld.cpp files to manage objects within the game. 
 - All objects are from a base Actors class, with a virtual/abstract function to doSomething().
 - All objects are initiated and destroyed within the StudentWorld class, which manages all objects within the class.
 - Reduces iteration within the ZombieCab actor initialization and actions with a private member to hold coordinate data. This goes outside of project specifications, but reduces iterations by O(C), where C is the number of cabs on the screen.
