@@ -1,0 +1,98 @@
+warning: LF will be replaced by CRLF in GhostRacer/Actor.cpp.
+The file will have its original line endings in your working directory
+warning: LF will be replaced by CRLF in GhostRacer/StudentWorld.cpp.
+The file will have its original line endings in your working directory
+warning: LF will be replaced by CRLF in GhostRacer/StudentWorld.h.
+The file will have its original line endings in your working directory
+[1mdiff --git a/Debug/GhostRacer.ilk b/Debug/GhostRacer.ilk[m
+[1mindex 412b894..f0f6dac 100644[m
+Binary files a/Debug/GhostRacer.ilk and b/Debug/GhostRacer.ilk differ
+[1mdiff --git a/Debug/GhostRacer.pdb b/Debug/GhostRacer.pdb[m
+[1mindex b8efef6..61c29d0 100644[m
+Binary files a/Debug/GhostRacer.pdb and b/Debug/GhostRacer.pdb differ
+[1mdiff --git a/GhostRacer/Actor.cpp b/GhostRacer/Actor.cpp[m
+[1mindex 578c174..ca7da85 100644[m
+[1m--- a/GhostRacer/Actor.cpp[m
+[1m+++ b/GhostRacer/Actor.cpp[m
+[36m@@ -188,7 +188,7 @@[m [mvoid GhostRacer::doSomething()[m
+ 					xCoord = getX() + SPRITE_HEIGHT * cos(getDirection() * M_PI / 180);[m
+ 					yCoord = getY() + SPRITE_HEIGHT * sin(getDirection() * M_PI / 180);[m
+ 					sprayHolyWater = new HolyWater(xCoord, yCoord, getDirection(), getWorld());[m
+[31m-					getWorld()->addToActorList(sprayHolyWater);[m
+[32m+[m					[32mgetWorld()->addToNoInteractActorList(sprayHolyWater);[m
+ 					getWorld()->playSound(SOUND_PLAYER_SPRAY);[m
+ 					m_sprayNum -= 1;[m
+ 				}[m
+[36m@@ -347,7 +347,7 @@[m [mvoid ZombiePedestrian::sprayedHolyWater()[m
+ 		if (!randInt(0, 4))[m
+ 		{[m
+ 			HealingGoodie* heal = new HealingGoodie(getX(), getY(), getWorld());[m
+[31m-			getWorld()->addToActorList(heal);[m
+[32m+[m			[32mgetWorld()->addToInteractActorList(heal);[m
+ 		}[m
+ 		kill();[m
+ 	}[m
+[36m@@ -423,7 +423,7 @@[m [mvoid ZombieCab::sprayedHolyWater()[m
+ 		if (!randInt(0, 4))[m
+ 		{[m
+ 			OilSlick* oil = new OilSlick(getX(), getY(), randInt(2, 5), getWorld());[m
+[31m-			getWorld()->addToActorList(oil);[m
+[32m+[m			[32mgetWorld()->addToNoInteractActorList(oil);[m
+ 		}[m
+ [m
+ 		kill();[m
+[1mdiff --git a/GhostRacer/Debug/GhostRacer.tlog/link.read.1.tlog b/GhostRacer/Debug/GhostRacer.tlog/link.read.1.tlog[m
+[1mindex 8f2dc12..3326e5c 100644[m
+Binary files a/GhostRacer/Debug/GhostRacer.tlog/link.read.1.tlog and b/GhostRacer/Debug/GhostRacer.tlog/link.read.1.tlog differ
+[1mdiff --git a/GhostRacer/Debug/vc142.idb b/GhostRacer/Debug/vc142.idb[m
+[1mindex 1fd6b7b..1318df5 100644[m
+Binary files a/GhostRacer/Debug/vc142.idb and b/GhostRacer/Debug/vc142.idb differ
+[1mdiff --git a/GhostRacer/Debug/vc142.pdb b/GhostRacer/Debug/vc142.pdb[m
+[1mindex 27d8186..db8d220 100644[m
+Binary files a/GhostRacer/Debug/vc142.pdb and b/GhostRacer/Debug/vc142.pdb differ
+[1mdiff --git a/GhostRacer/StudentWorld.cpp b/GhostRacer/StudentWorld.cpp[m
+[1mindex e356c7f..e5a2776 100644[m
+[1m--- a/GhostRacer/StudentWorld.cpp[m
+[1m+++ b/GhostRacer/StudentWorld.cpp[m
+[36m@@ -27,7 +27,7 @@[m [mStudentWorld::StudentWorld(string assetPath)[m
+ int StudentWorld::init()[m
+ {[m
+ 	m_ghostRacer = new GhostRacer(this);[m
+[31m-	addToActorList(m_ghostRacer);[m
+[32m+[m	[32maddToInteractActorList(m_ghostRacer);[m
+ 	m_bonusPoints = 5000;[m
+ 	m_soulsToSave = 2 * getLevel() + 5;[m
+ 	m_previousBorderY = 0;[m
+[36m@@ -56,54 +56,14 @@[m [mint StudentWorld::move()[m
+ [m
+ 	//Iterate through all actors to doSomething[m
+ 	//Also check collidable actors (avoid re-iterating to add cabs)[m
+[31m-	list<Actor*>::iterator itr = m_actorList.begin();[m
+[31m-	while (itr != m_actorList.end()) {[m
+[31m-		(*itr)->doSomething();[m
+[31m-[m
+[31m-		//Check if ghostRacer is dead[m
+[31m-		if (!m_ghostRacer->getAlive())[m
+[31m-		{[m
+[31m-			playSound(SOUND_PLAYER_DIE);[m
+[31m-			decLives();[m
+[31m-			return GWSTATUS_PLAYER_DIED;[m
+[31m-		}[m
+[31m-[m
+[31m-		//Check if the level is completed[m
+[31m-		if (m_soulsToSave <= 0)[m
+[31m-		{[m
+[31m-			increaseScore(m_bonusPoints);[m
+[31m-			playSound(SOUND_FINISHED_LEVEL);[m
+[31m-			return GWSTATUS_FINISHED_LEVEL;[m
+[31m-		}[m
+[31m-[m
+[31m-		//Update the collision coordinates for ZombieCab Navigation[m
+[31m-		if ((*itr)->collidable())[m
+[31m-		{[m
+[31m-			int actorLane = getLane((*itr)->getX());[m
+[31m-			if (actorLane != -1)[m
+[31m-			{[m
+[31m-				double y_coord = (*itr)->getY();[m
+[31m-				m_botCollisionActor[actorLane] = min(m_botCollisionActor[actorLane], y_coord);[m
+[31m-				m_topCollisionActor[actorL
