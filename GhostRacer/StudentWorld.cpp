@@ -27,7 +27,7 @@ StudentWorld::StudentWorld(string assetPath)
 int StudentWorld::init()
 {
 	m_ghostRacer = new GhostRacer(this);
-	addToActorList(m_ghostRacer);
+	addToInteractActorList(m_ghostRacer);
 	m_bonusPoints = 5000;
 	m_soulsToSave = 2 * getLevel() + 5;
 	m_previousBorderY = 0;
@@ -56,54 +56,14 @@ int StudentWorld::move()
 
 	//Iterate through all actors to doSomething
 	//Also check collidable actors (avoid re-iterating to add cabs)
-	list<Actor*>::iterator itr = m_actorList.begin();
-	while (itr != m_actorList.end()) {
-		(*itr)->doSomething();
-
-		//Check if ghostRacer is dead
-		if (!m_ghostRacer->getAlive())
-		{
-			playSound(SOUND_PLAYER_DIE);
-			decLives();
-			return GWSTATUS_PLAYER_DIED;
-		}
-
-		//Check if the level is completed
-		if (m_soulsToSave <= 0)
-		{
-			increaseScore(m_bonusPoints);
-			playSound(SOUND_FINISHED_LEVEL);
-			return GWSTATUS_FINISHED_LEVEL;
-		}
-
-		//Update the collision coordinates for ZombieCab Navigation
-		if ((*itr)->collidable())
-		{
-			int actorLane = getLane((*itr)->getX());
-			if (actorLane != -1)
-			{
-				double y_coord = (*itr)->getY();
-				m_botCollisionActor[actorLane] = min(m_botCollisionActor[actorLane], y_coord);
-				m_topCollisionActor[actorLane] = max(m_topCollisionActor[actorLane], y_coord);
-			}
-		}
-		itr++;
-	}
+	int returnval = moveActiveActors(m_interactActorList);
+	if (returnval != -1) { return returnval; }
+	returnval = moveActiveActors(m_noInteractActorList);
+	if (returnval != -1) { return returnval; }
 
 	//Remove dead actors
-	itr = m_actorList.begin();
-	while (itr != m_actorList.end()) {
-		if (!(*itr)->getAlive())
-		{
-			Actor* del = (*itr);
-			itr = m_actorList.erase(itr);
-			delete del;
-		}
-		else
-		{
-			itr++;
-		}
-	}
+	removeDeadActors(m_interactActorList);
+	removeDeadActors(m_noInteractActorList);
 
 	//Add new actors 
 	addActors();
@@ -116,11 +76,17 @@ int StudentWorld::move()
 
 void StudentWorld::cleanUp()
 {
-	while (!m_actorList.empty())
+	while (!m_interactActorList.empty())
 	{
-		Actor* del = m_actorList.front();
+		Actor* del = m_interactActorList.front();
 		delete del;
-		m_actorList.pop_front();
+		m_interactActorList.pop_front();
+	}
+	while (!m_noInteractActorList.empty())
+	{
+		Actor* del = m_noInteractActorList.front();
+		delete del;
+		m_noInteractActorList.pop_front();
 	}
 }
 
@@ -146,10 +112,10 @@ bool StudentWorld::checkCollision(Actor* actorA, Actor* actorB)
 };
 bool StudentWorld::checkHolyWaterCollision(Actor* holyWaterSpray)
 {
-	list<Actor*>::iterator itr = m_actorList.begin();
-	while (itr != m_actorList.end())
+	list<Actor*>::iterator itr = m_interactActorList.begin();
+	while (itr != m_interactActorList.end())
 	{
-		
+
 		if ((*itr)->sprayable() &&
 			checkCollision(holyWaterSpray, (*itr)))
 		{
@@ -174,20 +140,18 @@ int StudentWorld::checkLaneCollisions(Actor* actor)
 		return 0;
 	}
 
-	list<Actor*>::iterator itr = m_actorList.begin();
+	list<Actor*>::iterator itr = m_interactActorList.begin();
 	int lane = getLane(actor->getX());
 	if (actor->getYSpeed() > getGhostRacer()->getYSpeed())
 	{
 		//Check if there is an actor above within 96 pixels
-		while (itr != m_actorList.end())
+		while (itr != m_interactActorList.end())
 		{
-			if (
-				(*itr)->collidable() &&
+			if ((*itr)->collidable() &&
 				(*itr) != actor &&
 				(*itr)->getY() - actor->getY() < 96 &&
 				(*itr)->getY() - actor->getY() > 0 &&
-				getLane((*itr)->getX()) == lane
-				)
+				getLane((*itr)->getX()) == lane)
 			{
 				return 1;
 			}
@@ -199,15 +163,13 @@ int StudentWorld::checkLaneCollisions(Actor* actor)
 	else
 	{
 		//Check if there is an actor below within 96 pixels
-		while (itr != m_actorList.end())
+		while (itr != m_interactActorList.end())
 		{
-			if (
-				(*itr)->collidable() &&
+			if ((*itr)->collidable() &&
 				(*itr) != actor &&
 				actor->getY() - (*itr)->getY() < 96 &&
 				actor->getY() - (*itr)->getY() > 0 &&
-				getLane((*itr)->getX()) == lane
-				)
+				getLane((*itr)->getX()) == lane)
 			{
 				return 2;
 			}
@@ -221,9 +183,13 @@ void StudentWorld::savedSoul()
 {
 	m_soulsToSave -= 1;
 }
-void StudentWorld::addToActorList(Actor* actor)
+void StudentWorld::addToInteractActorList(Actor* actor)
 {
-	m_actorList.push_front(actor);
+	m_interactActorList.push_front(actor);
+}
+void StudentWorld::addToNoInteractActorList(Actor* actor)
+{
+	m_noInteractActorList.push_front(actor);
 }
 void StudentWorld::updateGameText()
 {
@@ -235,7 +201,7 @@ void StudentWorld::updateGameText()
 	string sprays = to_string(m_ghostRacer->getSpray());
 	string bonus = to_string(m_bonusPoints);
 
-	setGameStatText("Score: " + score + "  " + "Lvl: " + level + "  " + "SoulsToSave: " + souls + "  " + 
+	setGameStatText("Score: " + score + "  " + "Lvl: " + level + "  " + "SoulsToSave: " + souls + "  " +
 		"Lives: " + lives + "  " + "Health: " + health + "  " + "Sprays: " + sprays + "  " + "Bonus: " + bonus);
 }
 
@@ -270,7 +236,7 @@ void StudentWorld::addHumanPedestrian()
 	if (!randInt(0, ChanceHumanPed))
 	{
 		HumanPedestrian* human = new HumanPedestrian(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this);
-		addToActorList(human);
+		addToInteractActorList(human);
 	}
 
 }
@@ -280,7 +246,7 @@ void StudentWorld::addZombiePedestrian()
 	if (!randInt(0, ChanceZombiePed))
 	{
 		ZombiePedestrian* human = new ZombiePedestrian(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this);
-		addToActorList(human);
+		addToInteractActorList(human);
 	}
 }
 
@@ -324,19 +290,19 @@ void StudentWorld::addZombieCab()
 			return;
 		}
 		ZombieCab* cab = new ZombieCab(xSpawnCoord, ySpawnCoord, ySpawnSpeed, this);
-		addToActorList(cab);
+		addToInteractActorList(cab);
 	}
 }
 
 void StudentWorld::addOilSlick()
 {
-	int  chanceOilSlick = max(150 - getLevel()*10, 40);
+	int  chanceOilSlick = max(150 - getLevel() * 10, 40);
 	if (!randInt(0, chanceOilSlick))
 	{
 		double xCoord = randInt(LEFT_EDGE, RIGHT_EDGE);
 		int size = randInt(2, 5);
 		OilSlick* oil = new OilSlick(xCoord, VIEW_HEIGHT, size, this);
-		addToActorList(oil);
+		addToNoInteractActorList(oil);
 	}
 }
 
@@ -347,7 +313,7 @@ void StudentWorld::addSprayBottle()
 	{
 		double xCoord = randInt(LEFT_EDGE, RIGHT_EDGE);
 		SprayBottle* bottle = new SprayBottle(xCoord, VIEW_HEIGHT, this);
-		addToActorList(bottle);
+		addToInteractActorList(bottle);
 	}
 }
 
@@ -357,8 +323,8 @@ void StudentWorld::addLostSoul()
 	if (!randInt(0, chanceLostSoul))
 	{
 		double xCoord = randInt(LEFT_EDGE, RIGHT_EDGE);
-		LostSoul* bottle = new LostSoul(xCoord, VIEW_HEIGHT, this);
-		addToActorList(bottle);
+		LostSoul* soul = new LostSoul(xCoord, VIEW_HEIGHT, this);
+		addToNoInteractActorList(soul);
 	}
 }
 
@@ -373,14 +339,14 @@ void StudentWorld::addBorders_helper(bool yellowLine, double startY)
 	case true:
 		left = new BorderLine(IID_YELLOW_BORDER_LINE, LEFT_EDGE, startY, this);
 		right = new BorderLine(IID_YELLOW_BORDER_LINE, RIGHT_EDGE, startY, this);
-		addToActorList(left);
-		addToActorList(right);
+		addToNoInteractActorList(left);
+		addToNoInteractActorList(right);
 		break;
 	case false:
 		left = new BorderLine(IID_WHITE_BORDER_LINE, LEFT_WHITE_LINE, startY, this);
 		right = new BorderLine(IID_WHITE_BORDER_LINE, RIGHT_WHITE_LINE, startY, this);
-		addToActorList(left);
-		addToActorList(right);
+		addToNoInteractActorList(left);
+		addToNoInteractActorList(right);
 		m_previousBorderY = startY;
 		break;
 	}
@@ -404,5 +370,59 @@ int StudentWorld::getLane(double x_coord)
 	else
 	{
 		return -1;
+	}
+}
+
+int StudentWorld::moveActiveActors(std::list<Actor*>& actorList)
+{
+	list<Actor*>::iterator itr = actorList.begin();
+	while (itr != actorList.end()) {
+		(*itr)->doSomething();
+
+		//Check if ghostRacer is dead
+		if (!m_ghostRacer->getAlive())
+		{
+			playSound(SOUND_PLAYER_DIE);
+			decLives();
+			return GWSTATUS_PLAYER_DIED;
+		}
+
+		//Check if the level is completed
+		if (m_soulsToSave <= 0)
+		{
+			increaseScore(m_bonusPoints);
+			playSound(SOUND_FINISHED_LEVEL);
+			return GWSTATUS_FINISHED_LEVEL;
+		}
+
+		//Update the collision coordinates for ZombieCab Navigation
+		if ((*itr)->collidable())
+		{
+			int actorLane = getLane((*itr)->getX());
+			if (actorLane != -1)
+			{
+				double y_coord = (*itr)->getY();
+				m_botCollisionActor[actorLane] = min(m_botCollisionActor[actorLane], y_coord);
+				m_topCollisionActor[actorLane] = max(m_topCollisionActor[actorLane], y_coord);
+			}
+		}
+		itr++;
+	}
+	return -1;
+}
+void StudentWorld::removeDeadActors(std::list<Actor*>& actorList)
+{
+	list<Actor*>::iterator itr = actorList.begin();
+	while (itr != actorList.end()) {
+		if (!(*itr)->getAlive())
+		{
+			Actor* del = (*itr);
+			itr = actorList.erase(itr);
+			delete del;
+		}
+		else
+		{
+			itr++;
+		}
 	}
 }

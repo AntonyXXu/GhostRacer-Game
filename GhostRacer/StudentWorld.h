@@ -22,7 +22,8 @@ public:
 	bool checkHolyWaterCollision(Actor* holyWaterSpray);
 	int checkLaneCollisions(Actor* actor);
 	void savedSoul();
-	void addToActorList(Actor* actor);
+	void addToInteractActorList(Actor* actor);
+	void addToNoInteractActorList(Actor* actor);
 
 	GhostRacer* getGhostRacer() const;
 	static const int LEFT_EDGE = ROAD_CENTER - ROAD_WIDTH / 2;
@@ -36,8 +37,9 @@ public:
 private:
 	//Member Variables
 	GhostRacer* m_ghostRacer;
-	std::list<Actor*> m_actorList;
-	std::vector<double> m_botCollisionActor; 
+	std::list<Actor*> m_interactActorList;
+	std::list<Actor*> m_noInteractActorList;
+	std::vector<double> m_botCollisionActor;
 	std::vector<double> m_topCollisionActor;
 	int m_soulsToSave;
 	int m_bonusPoints;
@@ -53,8 +55,11 @@ private:
 	void addLostSoul();
 	void addBorders_helper(bool yellowLine, double startY);
 	//Helper Functions
+	int moveActiveActors(std::list<Actor*>& actorList);
+	void removeDeadActors(std::list<Actor*>& actorList);
 	int getLane(double x_coord);
 	void updateGameText();
+
 };
 
 struct collisionArray

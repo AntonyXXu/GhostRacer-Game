@@ -188,7 +188,7 @@ void GhostRacer::doSomething()
 					xCoord = getX() + SPRITE_HEIGHT * cos(getDirection() * M_PI / 180);
 					yCoord = getY() + SPRITE_HEIGHT * sin(getDirection() * M_PI / 180);
 					sprayHolyWater = new HolyWater(xCoord, yCoord, getDirection(), getWorld());
-					getWorld()->addToActorList(sprayHolyWater);
+					getWorld()->addToNoInteractActorList(sprayHolyWater);
 					getWorld()->playSound(SOUND_PLAYER_SPRAY);
 					m_sprayNum -= 1;
 				}
@@ -347,7 +347,7 @@ void ZombiePedestrian::sprayedHolyWater()
 		if (!randInt(0, 4))
 		{
 			HealingGoodie* heal = new HealingGoodie(getX(), getY(), getWorld());
-			getWorld()->addToActorList(heal);
+			getWorld()->addToInteractActorList(heal);
 		}
 		kill();
 	}
@@ -423,7 +423,7 @@ void ZombieCab::sprayedHolyWater()
 		if (!randInt(0, 4))
 		{
 			OilSlick* oil = new OilSlick(getX(), getY(), randInt(2, 5), getWorld());
-			getWorld()->addToActorList(oil);
+			getWorld()->addToNoInteractActorList(oil);
 		}
 
 		kill();
