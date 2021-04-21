@@ -17,7 +17,7 @@ StudentWorld::StudentWorld(string assetPath)
 	m_bonusPoints = 5000;
 	m_soulsToSave = 2 * getLevel() + 5;
 	m_previousBorderY = 0;
-	for (int i = 0; i < NUM_LANES; i++)
+	for (int i = 0; i < kNumLanes; i++)
 	{
 		m_botCollisionActor.push_back(VIEW_HEIGHT);
 		m_topCollisionActor.push_back(VIEW_HEIGHT);
@@ -33,12 +33,12 @@ int StudentWorld::init()
 	m_previousBorderY = 0;
 
 	//init yellow lines. init i as double to multiply sprite
-	for (int i = 0; i < NUM_YELLOW_LINE; i++) {
+	for (int i = 0; i < kNumYellowLine; i++) {
 		addBorders_helper(true, i * SPRITE_HEIGHT);
 		addBorders_helper(true, i * SPRITE_HEIGHT);
 	}
 	//init white lines
-	for (int i = 0; i < NUM_WHITE_LINE; i++) {
+	for (int i = 0; i < kNumWhiteLines; i++) {
 		addBorders_helper(false, 4 * i * SPRITE_HEIGHT);
 		addBorders_helper(false, 4 * i * SPRITE_HEIGHT);
 	}
@@ -109,7 +109,7 @@ bool StudentWorld::checkCollision(Actor* actorA, Actor* actorB)
 		return true;
 	}
 	return false;
-};
+}
 bool StudentWorld::checkHolyWaterCollision(Actor* holyWaterSpray)
 {
 	list<Actor*>::iterator itr = m_interactActorList.begin();
@@ -343,8 +343,8 @@ void StudentWorld::addBorders_helper(bool yellowLine, double startY)
 		addToNoInteractActorList(right);
 		break;
 	case false:
-		left = new BorderLine(IID_WHITE_BORDER_LINE, LEFT_WHITE_LINE, startY, this);
-		right = new BorderLine(IID_WHITE_BORDER_LINE, RIGHT_WHITE_LINE, startY, this);
+		left = new BorderLine(IID_WHITE_BORDER_LINE, kLeftWhiteLine, startY, this);
+		right = new BorderLine(IID_WHITE_BORDER_LINE, kRightWhiteLine, startY, this);
 		addToNoInteractActorList(left);
 		addToNoInteractActorList(right);
 		m_previousBorderY = startY;
@@ -355,11 +355,11 @@ void StudentWorld::addBorders_helper(bool yellowLine, double startY)
 int StudentWorld::getLane(double x_coord)
 {
 	//Get Lane, with left lane = 1, middle = 2, right = 3
-	if (LEFT_EDGE <= x_coord && x_coord < LEFT_WHITE_LINE)
+	if (LEFT_EDGE <= x_coord && x_coord < kLeftWhiteLine)
 	{
 		return 0;
 	}
-	else if (x_coord <= RIGHT_WHITE_LINE)
+	else if (x_coord <= kRightWhiteLine)
 	{
 		return 1;
 	}

@@ -24,15 +24,11 @@ public:
 	void savedSoul();
 	void addToInteractActorList(Actor* actor);
 	void addToNoInteractActorList(Actor* actor);
-
-	GhostRacer* getGhostRacer() const;
 	static const int LEFT_EDGE = ROAD_CENTER - ROAD_WIDTH / 2;
 	static const int RIGHT_EDGE = ROAD_CENTER + ROAD_WIDTH / 2;
-	static const int NUM_YELLOW_LINE = VIEW_HEIGHT / SPRITE_HEIGHT;
-	static const int LEFT_WHITE_LINE = LEFT_EDGE + ROAD_WIDTH / 3;
-	static const int RIGHT_WHITE_LINE = RIGHT_EDGE - ROAD_WIDTH / 3;
-	static const int NUM_WHITE_LINE = VIEW_HEIGHT / (4 * SPRITE_HEIGHT);
-	static const int NUM_LANES = 3;
+	GhostRacer* getGhostRacer() const;
+
+
 
 private:
 	//Member Variables
@@ -41,6 +37,11 @@ private:
 	std::list<Actor*> m_noInteractActorList;
 	std::vector<double> m_botCollisionActor;
 	std::vector<double> m_topCollisionActor;
+	const int kNumYellowLine = VIEW_HEIGHT / SPRITE_HEIGHT;
+	const int kLeftWhiteLine = LEFT_EDGE + ROAD_WIDTH / 3;
+	const int kRightWhiteLine = RIGHT_EDGE - ROAD_WIDTH / 3;
+	const int kNumWhiteLines = VIEW_HEIGHT / (4 * SPRITE_HEIGHT);
+	const int kNumLanes = 3;
 	int m_soulsToSave;
 	int m_bonusPoints;
 	double m_previousBorderY;
@@ -60,11 +61,6 @@ private:
 	int getLane(double x_coord);
 	void updateGameText();
 
-};
-
-struct collisionArray
-{
-public:
 };
 
 #endif // STUDENTWORLD_H_
