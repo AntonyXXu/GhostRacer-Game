@@ -33,11 +33,8 @@ StudentWorld* Actor::getWorld() const { return m_worldPtr; }
 
 bool Actor::offScreen() const
 {
-	if (getY() > VIEW_HEIGHT || getY() < 0 || getX() > VIEW_WIDTH || getX() < 0)
-	{
-		return true;
-	}
-	return false;
+	return (getY() > VIEW_HEIGHT || getY() < 0 || getX() > VIEW_WIDTH || getX() < 0);
+
 }
 void Actor::kill() { m_alive = false; }
 
@@ -508,7 +505,7 @@ void HolyWater::doSomething()
 {
 	if (!getAlive())
 	{
-	return;
+		return;
 	}
 
 	//check for collision with another actor
