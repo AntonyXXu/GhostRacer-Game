@@ -28,8 +28,6 @@ public:
 	static const int RIGHT_EDGE = ROAD_CENTER + ROAD_WIDTH / 2;
 	GhostRacer* getGhostRacer() const;
 
-
-
 private:
 	//Member Variables
 	GhostRacer* m_ghostRacer;

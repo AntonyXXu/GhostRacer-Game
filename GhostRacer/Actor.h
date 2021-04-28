@@ -94,7 +94,6 @@ class Pedestrian : public DynamicActor
 {
 public:
 	Pedestrian(int imageID, double startX, double startY, double size, StudentWorld* worldptr);
-private:
 
 };
 
